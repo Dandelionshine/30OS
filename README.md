@@ -50,9 +50,10 @@
 
 5. 程序初值及运行结果
 
-![image](https://github.com/AngelSXD/sxd_first_repository/blob/master/images/20160615165142.png)
-![image](https://github.com/AngelSXD/sxd_first_repository/blob/master/images/20160615165142.png)
-![image](https://github.com/AngelSXD/sxd_first_repository/blob/master/images/20160615165142.png)
+![image](https://github.com/Dandelionshine/30OS/blob/master/image/0.png)
+![image](https://github.com/Dandelionshine/30OS/blob/master/image/1.png)
+![image](https://github.com/Dandelionshine/30OS/blob/master/image/2.png)
+![image](https://github.com/Dandelionshine/30OS/blob/master/image/3.png)
 
 6. 实验体会和思考题
    1. 背景图片设置时图片文件大小最多一百多KB，太大了会影响系统其他内容的显示；
