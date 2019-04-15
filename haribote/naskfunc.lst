@@ -1,0 +1,474 @@
+     1 00000000                                 ; naskfunc
+     2 00000000                                 ; TAB=4
+     3 00000000                                 
+     4 00000000                                 [FORMAT "WCOFF"]				; 僆僽僕僃僋僩僼傽僀儖傪嶌傞儌乕僪	
+     5 00000000                                 [INSTRSET "i486p"]				; 486偺柦椷傑偱巊偄偨偄偲偄偆婰弎
+     6 00000000                                 [BITS 32]						; 32價僢僩儌乕僪梡偺婡夿岅傪嶌傜偣傞
+     7 00000000                                 [FILE "naskfunc.nas"]			; 僜乕僗僼傽僀儖柤忣曬
+     8 00000000                                 
+     9 00000000                                 		GLOBAL	_io_hlt, _io_cli, _io_sti, _io_stihlt
+    10 00000000                                 		GLOBAL	_io_in8,  _io_in16,  _io_in32
+    11 00000000                                 		GLOBAL	_io_out8, _io_out16, _io_out32
+    12 00000000                                 		GLOBAL	_io_load_eflags, _io_store_eflags
+    13 00000000                                 		GLOBAL	_load_gdtr, _load_idtr
+    14 00000000                                 		GLOBAL	_load_cr0, _store_cr0
+    15 00000000                                 		GLOBAL	_load_tr
+    16 00000000                                 		GLOBAL	_asm_inthandler20, _asm_inthandler21
+    17 00000000                                 		GLOBAL	_asm_inthandler2c, _asm_inthandler0c
+    18 00000000                                 		GLOBAL	_asm_inthandler0d, _asm_end_app
+    19 00000000                                 		GLOBAL	_memtest_sub
+    20 00000000                                 		GLOBAL	_farjmp, _farcall
+    21 00000000                                 		GLOBAL	_asm_hrb_api, _start_app
+    22 00000000                                 		GLOBAL	_shutdown, _reboot
+    23 00000000                                 		EXTERN	_inthandler20, _inthandler21
+    24 00000000                                 		EXTERN	_inthandler2c, _inthandler0d
+    25 00000000                                 		EXTERN	_inthandler0c
+    26 00000000                                 		EXTERN	_hrb_api
+    27 00000000                                 
+    28                                          [SECTION .text]
+    29 00000000                                 
+    30 00000000                                 _io_hlt:	; void io_hlt(void);
+    31 00000000 F4                              		HLT
+    32 00000001 C3                              		RET
+    33 00000002                                 
+    34 00000002                                 _io_cli:	; void io_cli(void);
+    35 00000002 FA                              		CLI
+    36 00000003 C3                              		RET
+    37 00000004                                 
+    38 00000004                                 _io_sti:	; void io_sti(void);
+    39 00000004 FB                              		STI
+    40 00000005 C3                              		RET
+    41 00000006                                 
+    42 00000006                                 _io_stihlt:	; void io_stihlt(void);
+    43 00000006 FB                              		STI
+    44 00000007 F4                              		HLT
+    45 00000008 C3                              		RET
+    46 00000009                                 
+    47 00000009                                 _io_in8:	; int io_in8(int port);
+    48 00000009 8B 54 24 04                     		MOV		EDX,[ESP+4]		; port
+    49 0000000D B8 00000000                     		MOV		EAX,0
+    50 00000012 EC                              		IN		AL,DX
+    51 00000013 C3                              		RET
+    52 00000014                                 
+    53 00000014                                 _io_in16:	; int io_in16(int port);
+    54 00000014 8B 54 24 04                     		MOV		EDX,[ESP+4]		; port
+    55 00000018 B8 00000000                     		MOV		EAX,0
+    56 0000001D 66 ED                           		IN		AX,DX
+    57 0000001F C3                              		RET
+    58 00000020                                 
+    59 00000020                                 _io_in32:	; int io_in32(int port);
+    60 00000020 8B 54 24 04                     		MOV		EDX,[ESP+4]		; port
+    61 00000024 ED                              		IN		EAX,DX
+    62 00000025 C3                              		RET
+    63 00000026                                 
+    64 00000026                                 _io_out8:	; void io_out8(int port, int data);
+    65 00000026 8B 54 24 04                     		MOV		EDX,[ESP+4]		; port
+    66 0000002A 8A 44 24 08                     		MOV		AL,[ESP+8]		; data
+    67 0000002E EE                              		OUT		DX,AL
+    68 0000002F C3                              		RET
+    69 00000030                                 
+    70 00000030                                 _io_out16:	; void io_out16(int port, int data);
+    71 00000030 8B 54 24 04                     		MOV		EDX,[ESP+4]		; port
+    72 00000034 8B 44 24 08                     		MOV		EAX,[ESP+8]		; data
+    73 00000038 66 EF                           		OUT		DX,AX
+    74 0000003A C3                              		RET
+    75 0000003B                                 
+    76 0000003B                                 _io_out32:	; void io_out32(int port, int data);
+    77 0000003B 8B 54 24 04                     		MOV		EDX,[ESP+4]		; port
+    78 0000003F 8B 44 24 08                     		MOV		EAX,[ESP+8]		; data
+    79 00000043 EF                              		OUT		DX,EAX
+    80 00000044 C3                              		RET
+    81 00000045                                 
+    82 00000045                                 _io_load_eflags:	; int io_load_eflags(void);
+    83 00000045 9C                              		PUSHFD		; PUSH EFLAGS 偲偄偆堄枴
+    84 00000046 58                              		POP		EAX
+    85 00000047 C3                              		RET
+    86 00000048                                 
+    87 00000048                                 _io_store_eflags:	; void io_store_eflags(int eflags);
+    88 00000048 8B 44 24 04                     		MOV		EAX,[ESP+4]
+    89 0000004C 50                              		PUSH	EAX
+    90 0000004D 9D                              		POPFD		; POP EFLAGS 偲偄偆堄枴
+    91 0000004E C3                              		RET
+    92 0000004F                                 
+    93 0000004F                                 _load_gdtr:		; void load_gdtr(int limit, int addr);
+    94 0000004F 66 8B 44 24 04                  		MOV		AX,[ESP+4]		; limit
+    95 00000054 66 89 44 24 06                  		MOV		[ESP+6],AX
+    96 00000059 0F 01 54 24 06                  		LGDT	[ESP+6]
+    97 0000005E C3                              		RET
+    98 0000005F                                 
+    99 0000005F                                 _load_idtr:		; void load_idtr(int limit, int addr);
+   100 0000005F 66 8B 44 24 04                  		MOV		AX,[ESP+4]		; limit
+   101 00000064 66 89 44 24 06                  		MOV		[ESP+6],AX
+   102 00000069 0F 01 5C 24 06                  		LIDT	[ESP+6]
+   103 0000006E C3                              		RET
+   104 0000006F                                 
+   105 0000006F                                 _load_cr0:		; int load_cr0(void);
+   106 0000006F 0F 20 C0                        		MOV		EAX,CR0
+   107 00000072 C3                              		RET
+   108 00000073                                 
+   109 00000073                                 _store_cr0:		; void store_cr0(int cr0);
+   110 00000073 8B 44 24 04                     		MOV		EAX,[ESP+4]
+   111 00000077 0F 22 C0                        		MOV		CR0,EAX
+   112 0000007A C3                              		RET
+   113 0000007B                                 
+   114 0000007B                                 _load_tr:		; void load_tr(int tr);
+   115 0000007B 0F 00 5C 24 04                  		LTR		[ESP+4]			; tr
+   116 00000080 C3                              		RET
+   117 00000081                                 
+   118 00000081                                 _asm_inthandler20:
+   119 00000081 06                              		PUSH	ES
+   120 00000082 1E                              		PUSH	DS
+   121 00000083 60                              		PUSHAD
+   122 00000084 89 E0                           		MOV		EAX,ESP
+   123 00000086 50                              		PUSH	EAX
+   124 00000087 66 8C D0                        		MOV		AX,SS
+   125 0000008A 8E D8                           		MOV		DS,AX
+   126 0000008C 8E C0                           		MOV		ES,AX
+   127 0000008E E8 [00000000]                   		CALL	_inthandler20
+   128 00000093 58                              		POP		EAX
+   129 00000094 61                              		POPAD
+   130 00000095 1F                              		POP		DS
+   131 00000096 07                              		POP		ES
+   132 00000097 CF                              		IRETD
+   133 00000098                                 
+   134 00000098                                 _asm_inthandler21:
+   135 00000098 06                              		PUSH	ES
+   136 00000099 1E                              		PUSH	DS
+   137 0000009A 60                              		PUSHAD
+   138 0000009B 89 E0                           		MOV		EAX,ESP
+   139 0000009D 50                              		PUSH	EAX
+   140 0000009E 66 8C D0                        		MOV		AX,SS
+   141 000000A1 8E D8                           		MOV		DS,AX
+   142 000000A3 8E C0                           		MOV		ES,AX
+   143 000000A5 E8 [00000000]                   		CALL	_inthandler21
+   144 000000AA 58                              		POP		EAX
+   145 000000AB 61                              		POPAD
+   146 000000AC 1F                              		POP		DS
+   147 000000AD 07                              		POP		ES
+   148 000000AE CF                              		IRETD
+   149 000000AF                                 
+   150 000000AF                                 _asm_inthandler2c:
+   151 000000AF 06                              		PUSH	ES
+   152 000000B0 1E                              		PUSH	DS
+   153 000000B1 60                              		PUSHAD
+   154 000000B2 89 E0                           		MOV		EAX,ESP
+   155 000000B4 50                              		PUSH	EAX
+   156 000000B5 66 8C D0                        		MOV		AX,SS
+   157 000000B8 8E D8                           		MOV		DS,AX
+   158 000000BA 8E C0                           		MOV		ES,AX
+   159 000000BC E8 [00000000]                   		CALL	_inthandler2c
+   160 000000C1 58                              		POP		EAX
+   161 000000C2 61                              		POPAD
+   162 000000C3 1F                              		POP		DS
+   163 000000C4 07                              		POP		ES
+   164 000000C5 CF                              		IRETD
+   165 000000C6                                 
+   166 000000C6                                 _asm_inthandler0c:
+   167 000000C6 FB                              		STI
+   168 000000C7 06                              		PUSH	ES
+   169 000000C8 1E                              		PUSH	DS
+   170 000000C9 60                              		PUSHAD
+   171 000000CA 89 E0                           		MOV		EAX,ESP
+   172 000000CC 50                              		PUSH	EAX
+   173 000000CD 66 8C D0                        		MOV		AX,SS
+   174 000000D0 8E D8                           		MOV		DS,AX
+   175 000000D2 8E C0                           		MOV		ES,AX
+   176 000000D4 E8 [00000000]                   		CALL	_inthandler0c
+   177 000000D9 83 F8 00                        		CMP		EAX,0
+   178 000000DC 0F 85 00000091                  		JNE		_asm_end_app
+   179 000000E2 58                              		POP		EAX
+   180 000000E3 61                              		POPAD
+   181 000000E4 1F                              		POP		DS
+   182 000000E5 07                              		POP		ES
+   183 000000E6 83 C4 04                        		ADD		ESP,4			; INT 0x0c 偱傕丄偙傟偑昁梫
+   184 000000E9 CF                              		IRETD
+   185 000000EA                                 
+   186 000000EA                                 _asm_inthandler0d:
+   187 000000EA FB                              		STI
+   188 000000EB 06                              		PUSH	ES
+   189 000000EC 1E                              		PUSH	DS
+   190 000000ED 60                              		PUSHAD
+   191 000000EE 89 E0                           		MOV		EAX,ESP
+   192 000000F0 50                              		PUSH	EAX
+   193 000000F1 66 8C D0                        		MOV		AX,SS
+   194 000000F4 8E D8                           		MOV		DS,AX
+   195 000000F6 8E C0                           		MOV		ES,AX
+   196 000000F8 E8 [00000000]                   		CALL	_inthandler0d
+   197 000000FD 83 F8 00                        		CMP		EAX,0			; 偙偙偩偗堘偆
+   198 00000100 75 71                           		JNE		_asm_end_app	; 偙偙偩偗堘偆
+   199 00000102 58                              		POP		EAX
+   200 00000103 61                              		POPAD
+   201 00000104 1F                              		POP		DS
+   202 00000105 07                              		POP		ES
+   203 00000106 83 C4 04                        		ADD		ESP,4			; INT 0x0d 偱偼丄偙傟偑昁梫
+   204 00000109 CF                              		IRETD
+   205 0000010A                                 
+   206 0000010A                                 _memtest_sub:	; unsigned int memtest_sub(unsigned int start, unsigned int end)
+   207 0000010A 57                              		PUSH	EDI						; 乮EBX, ESI, EDI 傕巊偄偨偄偺偱乯
+   208 0000010B 56                              		PUSH	ESI
+   209 0000010C 53                              		PUSH	EBX
+   210 0000010D BE AA55AA55                     		MOV		ESI,0xaa55aa55			; pat0 = 0xaa55aa55;
+   211 00000112 BF 55AA55AA                     		MOV		EDI,0x55aa55aa			; pat1 = 0x55aa55aa;
+   212 00000117 8B 44 24 10                     		MOV		EAX,[ESP+12+4]			; i = start;
+   213 0000011B                                 mts_loop:
+   214 0000011B 89 C3                           		MOV		EBX,EAX
+   215 0000011D 81 C3 00000FFC                  		ADD		EBX,0xffc				; p = i + 0xffc;
+   216 00000123 8B 13                           		MOV		EDX,[EBX]				; old = *p;
+   217 00000125 89 33                           		MOV		[EBX],ESI				; *p = pat0;
+   218 00000127 83 33 FF                        		XOR		DWORD [EBX],0xffffffff	; *p ^= 0xffffffff;
+   219 0000012A 3B 3B                           		CMP		EDI,[EBX]				; if (*p != pat1) goto fin;
+   220 0000012C 75 18                           		JNE		mts_fin
+   221 0000012E 83 33 FF                        		XOR		DWORD [EBX],0xffffffff	; *p ^= 0xffffffff;
+   222 00000131 3B 33                           		CMP		ESI,[EBX]				; if (*p != pat0) goto fin;
+   223 00000133 75 11                           		JNE		mts_fin
+   224 00000135 89 13                           		MOV		[EBX],EDX				; *p = old;
+   225 00000137 05 00001000                     		ADD		EAX,0x1000				; i += 0x1000;
+   226 0000013C 3B 44 24 14                     		CMP		EAX,[ESP+12+8]			; if (i <= end) goto mts_loop;
+   227 00000140 76 D9                           		JBE		mts_loop
+   228 00000142 5B                              		POP		EBX
+   229 00000143 5E                              		POP		ESI
+   230 00000144 5F                              		POP		EDI
+   231 00000145 C3                              		RET
+   232 00000146                                 mts_fin:
+   233 00000146 89 13                           		MOV		[EBX],EDX				; *p = old;
+   234 00000148 5B                              		POP		EBX
+   235 00000149 5E                              		POP		ESI
+   236 0000014A 5F                              		POP		EDI
+   237 0000014B C3                              		RET
+   238 0000014C                                 
+   239 0000014C                                 _farjmp:		; void farjmp(int eip, int cs);
+   240 0000014C FF 6C 24 04                     		JMP		FAR	[ESP+4]				; eip, cs
+   241 00000150 C3                              		RET
+   242 00000151                                 
+   243 00000151                                 _farcall:		; void farcall(int eip, int cs);
+   244 00000151 FF 5C 24 04                     		CALL	FAR	[ESP+4]				; eip, cs
+   245 00000155 C3                              		RET
+   246 00000156                                 
+   247 00000156                                 _asm_hrb_api:
+   248 00000156 FB                              		STI
+   249 00000157 1E                              		PUSH	DS
+   250 00000158 06                              		PUSH	ES
+   251 00000159 60                              		PUSHAD		; 曐懚偺偨傔偺PUSH
+   252 0000015A 60                              		PUSHAD		; hrb_api偵傢偨偡偨傔偺PUSH
+   253 0000015B 66 8C D0                        		MOV		AX,SS
+   254 0000015E 8E D8                           		MOV		DS,AX		; OS梡偺僙僌儊儞僩傪DS偲ES偵傕擖傟傞
+   255 00000160 8E C0                           		MOV		ES,AX
+   256 00000162 E8 [00000000]                   		CALL	_hrb_api
+   257 00000167 83 F8 00                        		CMP		EAX,0		; EAX偑0偱側偗傟偽傾僾儕廔椆張棟
+   258 0000016A 75 07                           		JNE		_asm_end_app
+   259 0000016C 83 C4 20                        		ADD		ESP,32
+   260 0000016F 61                              		POPAD
+   261 00000170 07                              		POP		ES
+   262 00000171 1F                              		POP		DS
+   263 00000172 CF                              		IRETD
+   264 00000173                                 _asm_end_app:
+   265 00000173                                 ;	EAX偼tss.esp0偺斣抧
+   266 00000173 8B 20                           		MOV		ESP,[EAX]
+   267 00000175 C7 40 04 00000000               		MOV		DWORD [EAX+4],0
+   268 0000017C 61                              		POPAD
+   269 0000017D C3                              		RET					; cmd_app傊婣傞
+   270 0000017E                                 
+   271 0000017E                                 _start_app:		; void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
+   272 0000017E 60                              		PUSHAD		; 32價僢僩儗僕僗僞傪慡晹曐懚偟偰偍偔
+   273 0000017F 8B 44 24 24                     		MOV		EAX,[ESP+36]	; 傾僾儕梡偺EIP
+   274 00000183 8B 4C 24 28                     		MOV		ECX,[ESP+40]	; 傾僾儕梡偺CS
+   275 00000187 8B 54 24 2C                     		MOV		EDX,[ESP+44]	; 傾僾儕梡偺ESP
+   276 0000018B 8B 5C 24 30                     		MOV		EBX,[ESP+48]	; 傾僾儕梡偺DS/SS
+   277 0000018F 8B 6C 24 34                     		MOV		EBP,[ESP+52]	; tss.esp0偺斣抧
+   278 00000193 89 65 00                        		MOV		[EBP  ],ESP		; OS梡偺ESP傪曐懚
+   279 00000196 8C 55 04                        		MOV		[EBP+4],SS		; OS梡偺SS傪曐懚
+   280 00000199 8E C3                           		MOV		ES,BX
+   281 0000019B 8E DB                           		MOV		DS,BX
+   282 0000019D 8E E3                           		MOV		FS,BX
+   283 0000019F 8E EB                           		MOV		GS,BX
+   284 000001A1                                 ;	埲壓偼RETF偱傾僾儕偵峴偐偣傞偨傔偺僗僞僢僋挷惍
+   285 000001A1 83 C9 03                        		OR		ECX,3			; 傾僾儕梡偺僙僌儊儞僩斣崋偵3傪OR偡傞
+   286 000001A4 83 CB 03                        		OR		EBX,3			; 傾僾儕梡偺僙僌儊儞僩斣崋偵3傪OR偡傞
+   287 000001A7 53                              		PUSH	EBX				; 傾僾儕偺SS
+   288 000001A8 52                              		PUSH	EDX				; 傾僾儕偺ESP
+   289 000001A9 51                              		PUSH	ECX				; 傾僾儕偺CS
+   290 000001AA 50                              		PUSH	EAX				; 傾僾儕偺EIP
+   291 000001AB CB                              		RETF
+   292 000001AC                                 ;	傾僾儕偑廔椆偟偰傕偙偙偵偼棃側偄
+   293 000001AC                                 
+   294 000001AC                                 _shutdown:
+   295 000001AC E9 0000007F                     	JMP start
+   296 000001B1 00 00                           	db 0x00, 0x00
+   297 000001B3                                 	protect16:
+   298 000001B3 B8 08 00 8E D8 8E C0 8E D0      	db 0xb8, 0x08, 0x00, 0x8e, 0xd8, 0x8e, 0xc0, 0x8e, 0xd0
+   299 000001BC 0F 20 C0 66 25 FE FF FF 7F      	db 0x0f, 0x20, 0xc0, 0x66, 0x25, 0xfe,0xff,0xff, 0x7f
+   300 000001C5 0F 22 C0                        	db 0x0f, 0x22, 0xc0
+   301 000001C8 EA                              	db 0xea
+   302 000001C9 0650 0000                       	dw 0x0650,0x0000
+   303 000001CD 00 00 00                        	ALIGNB 16
+   304  = 0000001D                              	protect16_len EQU $ - protect16
+   305 000001D0                                 	
+   306 000001D0                                 	;上面的代码为16位保护模式跳入实模式功能代码
+   307 000001D0                                 	;保护模式代码传送到内存0x0630处，为它保留0x20 B
+   308 000001D0                                 
+   309 000001D0                                 realmod:
+   310 000001D0 8C C8                           	db 0x8c, 0xc8
+   311 000001D2 8E D8                           	db 0x8e, 0xd8
+   312 000001D4 8E C0                           	db 0x8e, 0xc0
+   313 000001D6 8E D0                           	db 0x8e, 0xd0
+   314 000001D8 BC 00 08                        	db 0xbc, 0x00, 0x08
+   315 000001DB E4 92                           	db 0xe4, 0x92
+   316 000001DD 24 FD                           	db 0x24, 0xfd
+   317 000001DF E6 92                           	db 0xe6, 0x92
+   318 000001E1 90 90 90                        	db 0x90, 0x90, 0x90
+   319 000001E4 FB 90                           	db 0xfb, 0x90
+   320 000001E6 B8 03 00                        	db 0xb8, 0x03, 0x00
+   321 000001E9 CD 10                           	db 0xcd, 0x10
+   322 000001EB                                 	;关机
+   323 000001EB B8 07 53                        	db 0xb8, 0x07, 0x53
+   324 000001EE BB 01 00                        	db 0xbb, 0x01, 0x00
+   325 000001F1 B9 03 00                        	db 0xb9, 0x03, 0x00
+   326 000001F4 CD 15                           	db 0xcd, 0x15
+   327 000001F6 00 00 00 00 00 00 00 00 00 00   	ALIGNB 16
+   328  = 00000030                              	realmod_len EQU $ - realmod
+   329 00000200                                 	; 以上代码段为实模式下设置字符显示模式及关机代码
+   330 00000200                                 	; 实模式功能代码传送到0x0650处。
+   331 00000200                                 
+   332 00000200                                 GDTIDT:
+   333 00000200 0000 0000 0000 0000             	dw 0x0000, 0x0000, 0x0000, 0x0000
+   334 00000208 FFFF 0000 9200 0000             	dw 0xffff, 0x0000, 0x9200, 0x0000
+   335 00000210 FFFF 0000 9800 0000             	dw 0xffff, 0x0000, 0x9800, 0x0000
+   336 00000218 0000                            	dw 0x0000
+   337 0000021A 0017                            	dw 0x0017
+   338 0000021C 0600 0000                       	dw 0x0600, 0x0000
+   339 00000220 03FF                            	dw 0x03ff
+   340 00000222 0000 0000                       	dw 0x0000, 0x0000
+   341 00000226 00 00 00 00 00 00 00 00 00 00   	ALIGNB 16
+   342  = 00000030                              	GDTIDT_lenth EQU $ - GDTIDT
+   343 00000230                                 	;以上为GDT及ITD表项数据
+   344 00000230                                 	;以上数据传送到0x0600处，保留0x30 B的空间。
+   345 00000230                                 	
+   346 00000230                                 start:
+   347 00000230 BB [00000200]                   	MOV EBX, GDTIDT
+   348 00000235 BA 00000600                     	MOV EDX, 0x600
+   349 0000023A 66 B9 0030                      	MOV CX, GDTIDT_lenth
+   350 0000023E                                 	.loop1:
+   351 0000023E 2E 8A 03                        	MOV AL, [CS:EBX]
+   352 00000241 88 02                           	MOV [EDX], AL
+   353 00000243 43                              	INC EBX
+   354 00000244 42                              	INC EDX
+   355 00000245 E2 F7                           	loop .loop1
+   356 00000247                                 
+   357 00000247 BB [000001B3]                   	MOV EBX, protect16
+   358 0000024C BA 00000630                     	MOV EDX, 0x630
+   359 00000251 66 B9 001D                      	MOV CX, protect16_len
+   360 00000255                                 	.loop2:
+   361 00000255 2E 8A 03                        	MOV AL, [CS:EBX]
+   362 00000258 88 02                           	MOV [EDX], AL
+   363 0000025A 43                              	INC EBX
+   364 0000025B 42                              	INC EDX
+   365 0000025C E2 F7                           	loop .loop2
+   366 0000025E                                 
+   367 0000025E BB [000001D0]                   	MOV EBX, realmod
+   368 00000263 BA 00000650                     	MOV EDX, 0x650
+   369 00000268 66 B9 0030                      	MOV CX, realmod_len
+   370 0000026C                                 	.loop3:
+   371 0000026C 2E 8A 03                        	MOV AL, [CS:EBX]
+   372 0000026F 88 02                           	MOV [EDX], AL
+   373 00000271 43                              	INC EBX
+   374 00000272 42                              	INC EDX
+   375 00000273 E2 F7                           	loop .loop3
+   376 00000275                                 
+   377 00000275 0F 01 15 0000061A               	LGDT [0x061A]
+   378 0000027C 0F 01 1D 00000620               	LIDT [0x0620]
+   379 00000283 EA 00000630 0010                	JMP 2*8:0x0630
+   380 0000028A                                 ;--------------------------------------------------------------------------------------------------
+   381 0000028A                                 ;1.将以上代码复制追加到naskfunc.nas文件即可。还需要在前面导出shutdown2 这个符号。
+   382 0000028A                                 ;2.在bootpack.h 加入如下 void shutdown(void);
+   383 0000028A                                 ;3 在cons_runcmd 加一个命令处理分支：
+   384 0000028A                                 ; }else if (strcmp(cmdline, "shutdown")== 0) {
+   385 0000028A                                 ; shutdown();
+   386 0000028A                                 ; }
+   387 0000028A                                 
+   388 0000028A                                 _reboot:
+   389 0000028A E9 00000071                     	JMP start_reboot
+   390 0000028F 00 00                           	db 0x00, 0x00
+   391 00000291                                 	protect16_reboot:
+   392 00000291 B8 08 00 8E D8 8E C0 8E D0      	db 0xb8, 0x08, 0x00, 0x8e, 0xd8, 0x8e, 0xc0, 0x8e, 0xd0
+   393 0000029A 0F 20 C0 66 25 FE FF FF 7F      	db 0x0f, 0x20, 0xc0, 0x66, 0x25, 0xfe,0xff,0xff, 0x7f
+   394 000002A3 0F 22 C0                        	db 0x0f, 0x22, 0xc0
+   395 000002A6 EA                              	db 0xea
+   396 000002A7 0650 0000                       	dw 0x0650,0x0000
+   397 000002AB 00 00 00 00 00                  	ALIGNB 16
+   398  = 0000001F                              	protect16_reboot_len EQU $ - protect16_reboot
+   399 000002B0                                 	
+   400 000002B0                                 	;上面的代码为16位保护模式跳入实模式功能代码
+   401 000002B0                                 	;保护模式代码传送到内存0x0630处，为它保留0x20 B
+   402 000002B0                                 
+   403 000002B0                                 realmod_reboot:
+   404 000002B0 8C C8                           	db 0x8c, 0xc8
+   405 000002B2 8E D8                           	db 0x8e, 0xd8
+   406 000002B4 8E C0                           	db 0x8e, 0xc0
+   407 000002B6 8E D0                           	db 0x8e, 0xd0
+   408 000002B8 BC 00 08                        	db 0xbc, 0x00, 0x08
+   409 000002BB E4 92                           	db 0xe4, 0x92
+   410 000002BD 24 FD                           	db 0x24, 0xfd
+   411 000002BF E6 92                           	db 0xe6, 0x92
+   412 000002C1 90 90 90                        	db 0x90, 0x90, 0x90
+   413 000002C4 FB 90                           	db 0xfb, 0x90
+   414 000002C6 B8 03 00                        	db 0xb8, 0x03, 0x00
+   415 000002C9 CD 10                           	db 0xcd, 0x10
+   416 000002CB                                 	
+   417 000002CB                                 	;重启
+   418 000002CB B8 0000FFFF                     	mov eax,0xffff
+   419 000002D0 50                                  push eax
+   420 000002D1 B8 00000000                         mov eax,0
+   421 000002D6 50                                  push eax
+   422 000002D7 CB                                  retf
+   423  = 00000028                              	realmod_reboot_len EQU $ - realmod_reboot
+   424 000002D8                                 	; 以上代码段为实模式下设置字符显示模式及关机代码
+   425 000002D8                                 	; 实模式功能代码传送到0x0650处。
+   426 000002D8                                 
+   427 000002D8                                 GDTIDT_reboot:
+   428 000002D8 0000 0000 0000 0000             	dw 0x0000, 0x0000, 0x0000, 0x0000
+   429 000002E0 FFFF 0000 9200 0000             	dw 0xffff, 0x0000, 0x9200, 0x0000
+   430 000002E8 FFFF 0000 9800 0000             	dw 0xffff, 0x0000, 0x9800, 0x0000
+   431 000002F0 0000                            	dw 0x0000
+   432 000002F2 0017                            	dw 0x0017
+   433 000002F4 0600 0000                       	dw 0x0600, 0x0000
+   434 000002F8 03FF                            	dw 0x03ff
+   435 000002FA 0000 0000                       	dw 0x0000, 0x0000
+   436 000002FE 00 00                           	ALIGNB 16
+   437  = 00000028                              	GDTIDT_reboot_lenth EQU $ - GDTIDT_reboot
+   438 00000300                                 	;以上为GDT及ITD表项数据
+   439 00000300                                 	;以上数据传送到0x0600处，保留0x30 B的空间。
+   440 00000300                                 	
+   441 00000300                                 start_reboot:
+   442 00000300 BB [000002D8]                   	MOV EBX, GDTIDT_reboot
+   443 00000305 BA 00000600                     	MOV EDX, 0x600
+   444 0000030A 66 B9 0028                      	MOV CX, GDTIDT_reboot_lenth
+   445 0000030E                                 	.loop1_reboot:
+   446 0000030E 2E 8A 03                        	MOV AL, [CS:EBX]
+   447 00000311 88 02                           	MOV [EDX], AL
+   448 00000313 43                              	INC EBX
+   449 00000314 42                              	INC EDX
+   450 00000315 E2 F7                           	loop .loop1_reboot
+   451 00000317                                 
+   452 00000317 BB [00000291]                   	MOV EBX, protect16_reboot
+   453 0000031C BA 00000630                     	MOV EDX, 0x630
+   454 00000321 66 B9 001F                      	MOV CX, protect16_reboot_len
+   455 00000325                                 	.loop2_reboot:
+   456 00000325 2E 8A 03                        	MOV AL, [CS:EBX]
+   457 00000328 88 02                           	MOV [EDX], AL
+   458 0000032A 43                              	INC EBX
+   459 0000032B 42                              	INC EDX
+   460 0000032C E2 F7                           	loop .loop2_reboot
+   461 0000032E                                 
+   462 0000032E BB [000002B0]                   	MOV EBX, realmod_reboot
+   463 00000333 BA 00000650                     	MOV EDX, 0x650
+   464 00000338 66 B9 0028                      	MOV CX, realmod_reboot_len
+   465 0000033C                                 	.loop3_reboot:
+   466 0000033C 2E 8A 03                        	MOV AL, [CS:EBX]
+   467 0000033F 88 02                           	MOV [EDX], AL
+   468 00000341 43                              	INC EBX
+   469 00000342 42                              	INC EDX
+   470 00000343 E2 F7                           	loop .loop3_reboot
+   471 00000345                                 
+   472 00000345 0F 01 15 0000061A               	LGDT [0x061A]
+   473 0000034C 0F 01 1D 00000620               	LIDT [0x0620]
+   474 00000353 EA 00000630 0010                	JMP 2*8:0x0630

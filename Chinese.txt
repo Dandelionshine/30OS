@@ -1,0 +1,74 @@
+第一步：首先是准备好中文GB2312的二进制点阵文件。一般名字是：HZK16 这个文件各处网站都有下载。本少就好人做到底，把这个文件共享了：http://pan.baidu.com/s/1c1k9l1e
+这里我把上面的加了一个 fnt的后缀名。大家请自行下载。
+
+第二步：之前川合秀实君创建一个nihongo的文件夹将nihongo.fnt字体文件放到了该文件夹中，我们也依葫芦画瓢创建一个 chinese文件夹，然后将HZK16.fnt文件放入到该文件夹中。（nihongo的意思就是日本语的意思）
+
+第三步：修改主makefile文件，将原来装载nihongo.fnt的语句替换成装载HZK16.fnt即可：
+copy from:nihongo/nihongo.fnt to:@: \ 该语句替换成：copy from:chinese/hzk16.fnt to:@: \
+当然，上面也可以不用替换。两个字体文件都装载。那么就可以即解析日语也可以解析中文。不过考虑到软盘空间限制，我在这里是直接将日语点阵替换成了中文点阵。
+
+第四步：修改bootpack.c文件，将之前分配的装载日本语字体的内存扩大。之前只分配了47个区。现在中文gb2312编码扩大了一部分编码，编码区扩大为最大的94个即：将内存分配
+nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 47 * 94);
+改成---》 nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 94);
+然后将装载 nihongo.fnt进工作内存替换成装载hzk16.fnt进工作内存：
+finfo = file_search("nihongo.fnt", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+---》替换为：finfo = file_search("hzk16.fnt", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+
+第五步：在graphic.c文件中增加以下函数用于新增中文显示需要：
+void putfont8_ch(char *vram, int xsize, int x, int y, char c, char *font)
+{
+int i;
+char *p, d;
+for (i = 0; i < 16; i++)
+{
+p = vram + (y + i) * xsize + x;
+d = font[i * 2];
+if ((d & 0x80) != 0) p[0] = c;
+if ((d & 0x40) != 0) p[1] = c;
+if ((d & 0x20) != 0) p[2] = c;
+if ((d & 0x10) != 0) p[3] = c;
+if ((d & 0x08) != 0) p[4] = c;
+if ((d & 0x04) != 0) p[5] = c;
+if ((d & 0x02) != 0) p[6] = c;
+if ((d & 0x01) != 0) p[7] = c;
+}
+return;
+}
+第六步：修改graphic.c文件中的putfonts8_asc();函数。里面的原来解析日文显示的内容不变。在return语句之前新增如下：
+if(task->langmode == 3){
+for(; *s != 0x00; s++){
+if(task->langbyte1 == 0){
+if (*s >= 0xa0){
+task->langbyte1 = *s;
+}else {
+putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
+}
+
+}else{
+k = task->langbyte1 - 0xa0;
+t = *s - 0xa0;
+task->langbyte1 = 0;
+font = nihongo + ((k - 1) * 94 + (t - 1)) * 32;
+putfont8_ch(vram, xsize, x - 8, y, c, font );
+putfont8_ch(vram, xsize, x , y, c, font + 1);
+}
+x += 8;
+} 
+}
+显示模式3就是中文。
+
+第七步：
+第七步：修改console.c文件中的console_task();函数。
+其中启动console任务后默认的显示字符集由之前的显示日文修改为显示中文：
+if(nihongo[4096] != 0xff){
+task->langmode = 3; /* 将之前的显示日文改为新增的显示中文 */
+}else {
+task->langmode = 0;
+}
+第八步： 将console.c中的 cmd_langmode(struct CONSOLE *cons, char *cmdline);函数增加一个新增的语言显示项即将之前的：
+if(mode <= 2){
+task->langmode = mode;
+修改为：
+if(mode <= 3){
+task->langmode = mode;
+好了，完成上面的修改。中文就可以正常显示了。谢谢大家观赏。
